@@ -15,10 +15,30 @@ import { FiSearch } from "react-icons/fi"
 function OrderFilters() {
   const [fromDate, setFromDate] = useState("")
   const [toDate, setToDate] = useState("")
+  const [dateError, setDateError] = useState("")
+
+  function handleFromDate(value: string) {
+    setFromDate(value)
+    if (toDate && value > toDate) {
+      setDateError("'From' date cannot be after 'To' date.")
+    } else {
+      setDateError("")
+    }
+  }
+
+  function handleToDate(value: string) {
+    setToDate(value)
+    if (fromDate && value < fromDate) {
+      setDateError("'To' date cannot be before 'From' date.")
+    } else {
+      setDateError("")
+    }
+  }
 
   function handleReset() {
     setFromDate("")
     setToDate("")
+    setDateError("")
   }
 
   return (
@@ -72,7 +92,7 @@ function OrderFilters() {
             STATUS
           </Text>
           <Stack gap={2}>
-            <Checkbox.Root defaultChecked variant="solid">
+            <Checkbox.Root variant="solid">
               <Checkbox.HiddenInput />
               <Checkbox.Control />
               <Checkbox.Label>
@@ -80,7 +100,7 @@ function OrderFilters() {
               </Checkbox.Label>
             </Checkbox.Root>
 
-            <Checkbox.Root defaultChecked variant="solid">
+            <Checkbox.Root variant="solid">
               <Checkbox.HiddenInput />
               <Checkbox.Control />
               <Checkbox.Label>
@@ -88,7 +108,7 @@ function OrderFilters() {
               </Checkbox.Label>
             </Checkbox.Root>
 
-            <Checkbox.Root defaultChecked variant="solid">
+            <Checkbox.Root variant="solid">
               <Checkbox.HiddenInput />
               <Checkbox.Control />
               <Checkbox.Label>
@@ -106,7 +126,7 @@ function OrderFilters() {
             QUICK RANGE
           </Text>
           <Stack gap={2}>
-            <Checkbox.Root defaultChecked variant="solid">
+            <Checkbox.Root variant="solid">
               <Checkbox.HiddenInput />
               <Checkbox.Control />
               <Checkbox.Label>
@@ -114,7 +134,7 @@ function OrderFilters() {
               </Checkbox.Label>
             </Checkbox.Root>
 
-            <Checkbox.Root defaultChecked variant="solid">
+            <Checkbox.Root variant="solid">
               <Checkbox.HiddenInput />
               <Checkbox.Control />
               <Checkbox.Label>
@@ -122,7 +142,7 @@ function OrderFilters() {
               </Checkbox.Label>
             </Checkbox.Root>
 
-            <Checkbox.Root defaultChecked variant="solid">
+            <Checkbox.Root variant="solid">
               <Checkbox.HiddenInput />
               <Checkbox.Control />
               <Checkbox.Label>
@@ -140,28 +160,29 @@ function OrderFilters() {
             DATE RANGE
           </Text>
           <Stack gap={3}>
-            <Field.Root>
+            <Field.Root invalid={!!dateError}>
               <Field.Label fontSize="xs" color="gray.600" mb={1}>From</Field.Label>
               <Input
                 type="date"
                 size="sm"
                 borderRadius="md"
                 value={fromDate}
-                max={toDate || undefined}
-                onChange={(e) => setFromDate(e.target.value)}
+                onChange={(e) => handleFromDate(e.target.value)}
               />
             </Field.Root>
 
-            <Field.Root>
+            <Field.Root invalid={!!dateError}>
               <Field.Label fontSize="xs" color="gray.600" mb={1}>To</Field.Label>
               <Input
                 type="date"
                 size="sm"
                 borderRadius="md"
                 value={toDate}
-                min={fromDate || undefined}
-                onChange={(e) => setToDate(e.target.value)}
+                onChange={(e) => handleToDate(e.target.value)}
               />
+              {dateError && (
+                <Field.ErrorText fontSize="xs">{dateError}</Field.ErrorText>
+              )}
             </Field.Root>
           </Stack>
         </Box>
