@@ -43,7 +43,6 @@ function OrderFilters() {
 
   return (
     <Box
-      mt={4}
       bg="white"
       border="1px solid"
       borderColor="gray.200"
