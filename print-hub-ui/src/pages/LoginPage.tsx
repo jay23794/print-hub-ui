@@ -10,16 +10,32 @@ import {
 } from "@chakra-ui/react"
 import { useState } from "react"
 import { useNavigate } from "react-router"
+import { useAuth } from "../contexts/AuthContext"
+import { loginAdmin } from "../services/auth.service"
 
 function LoginPage() {
   const navigate = useNavigate()
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const { login } = useAuth()
 
-  const handleLogin = (e: React.FormEvent) => {
+  const [username, setUsername] = useState("")
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: replace with real auth logic
-    navigate("/")
+    setError("")
+    setLoading(true)
+
+    try {
+      const res = await loginAdmin({ username, password })
+      login(res.token)
+      navigate("/")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Login failed")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -49,13 +65,13 @@ function LoginPage() {
           <Stack gap={5}>
             <Field.Root required>
               <Field.Label color="gray.700" fontSize="sm" fontWeight="medium">
-                Email
+                Username
               </Field.Label>
               <Input
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                placeholder="adminph@printhub.com"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 size="md"
                 borderColor="gray.300"
               />
@@ -75,6 +91,12 @@ function LoginPage() {
               />
             </Field.Root>
 
+            {error && (
+              <Text color="red.500" fontSize="sm" textAlign="center">
+                {error}
+              </Text>
+            )}
+
             <Button
               type="submit"
               bg="gray.800"
@@ -83,6 +105,8 @@ function LoginPage() {
               w="full"
               mt={2}
               _hover={{ bg: "gray.700" }}
+              loading={loading}
+              loadingText="Signing in..."
             >
               Sign In
             </Button>

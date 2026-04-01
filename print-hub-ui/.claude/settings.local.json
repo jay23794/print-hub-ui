@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(cd:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(ls -la /e/outsource/print_hub_front_end/print-hub-ui/src/.env*)"
     ]
   }
 }
