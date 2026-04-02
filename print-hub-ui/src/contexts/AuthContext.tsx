@@ -11,16 +11,16 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(() =>
-    localStorage.getItem("auth_token")
+    localStorage.getItem("id_token")
   )
 
   function login(newToken: string) {
-    localStorage.setItem("auth_token", newToken)
+    localStorage.setItem("id_token", newToken)
     setToken(newToken)
   }
 
   function logout() {
-    localStorage.removeItem("auth_token")
+    localStorage.removeItem("id_token")
     setToken(null)
   }
 

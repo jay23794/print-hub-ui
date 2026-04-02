@@ -1,11 +1,15 @@
 import {
   Box,
+  Button,
   Flex,
   Heading,
   HStack,
   Spacer,
   Stack,
 } from "@chakra-ui/react"
+import { useNavigate } from "react-router"
+import { LuLogOut } from "react-icons/lu"
+import { useAuth } from "../contexts/AuthContext"
 
 import ProfileMenu from "../components/layout/ProfileMenu"
 
@@ -14,18 +18,35 @@ import OrdersTable from "../components/orders/OrdersTable"
 import OrderFilters from "../components/orders/OrderFilters"
 
 function Dashboard() {
- 
+  const { logout } = useAuth()
+  const navigate = useNavigate()
+
+  function handleLogout() {
+    logout()
+    navigate("/login")
+  }
+
   return (
     <Box minH="100vh" bg="gray.50">
       {/* Top Navbar */}
       <Box bg="gray.800" px={6} py={4} position="sticky" top={0} zIndex={10} boxShadow="md">
         <Flex align="center">
-        
+
           <Heading size="md" color="white" letterSpacing="wide">
             Print HuB
           </Heading>
           <Spacer />
-          <HStack>
+          <HStack gap={3}>
+            <Button
+              size="sm"
+              variant="ghost"
+              color="white"
+              _hover={{ bg: "gray.700" }}
+              onClick={handleLogout}
+            >
+              <LuLogOut />
+              Logout
+            </Button>
             <ProfileMenu />
           </HStack>
         </Flex>

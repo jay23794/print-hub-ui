@@ -12,5 +12,5 @@ export interface LoginResponse {
 
 export async function loginAdmin(payload: LoginPayload): Promise<LoginResponse> {
   // TODO: update path once confirmed
-  return apiPost<LoginResponse>("/auth/login", payload)
+  return apiPost<LoginResponse>("/admin/auth/signIn", payload)
 }
