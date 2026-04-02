@@ -29,7 +29,7 @@ function LoginPage() {
 
     try {
       const res = await loginAdmin({ username, password })
-      login(res.token)
+      login(res.data.token)
       navigate("/")
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed")

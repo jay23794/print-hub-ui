@@ -6,8 +6,10 @@ export interface LoginPayload {
 }
 
 export interface LoginResponse {
-  token: string
-  // TODO: adjust fields based on actual API response shape
+  data: {
+    token: string
+    expiresIn: string
+  }
 }
 
 export async function loginAdmin(payload: LoginPayload): Promise<LoginResponse> {

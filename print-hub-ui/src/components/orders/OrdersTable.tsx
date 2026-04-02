@@ -1,13 +1,15 @@
 import { Badge, Button, HStack, Skeleton, Stack, Table, Text } from "@chakra-ui/react"
 import { useEffect, useState } from "react"
-import { getAllOrders, acceptOrder, completeOrder, cancelOrder } from "../../services/orders.service"
-import type { OrderActionResponse } from "../../services/orders.service"
+import { getAllOrders, acceptOrder, completeOrder, cancelOrder, getOrderById } from "../../services/orders.service"
+import type { OrderActionResponse, OrderItem } from "../../services/orders.service"
+import OrderDetailModal from "./OrderDetailModal"
 
 const STATUS_COLOR: Record<string, string> = {
-  pending:   "orange",
-  accepted:  "blue",
-  completed: "green",
-  cancelled: "red",
+  pending:          "orange",
+  approval_pending: "yellow",
+  accepted:         "blue",
+  completed:        "green",
+  cancelled:        "red",
 }
 
 function formatDate(date: Date | string) {
@@ -18,6 +20,9 @@ function OrdersTable() {
   const [orders, setOrders] = useState<OrderActionResponse[]>([])
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<Record<string, string>>({})
+  const [selectedOrder, setSelectedOrder] = useState<OrderActionResponse | null>(null)
+  const [orderDetail, setOrderDetail] = useState<OrderItem[] | null>(null)
+  const [detailLoading, setDetailLoading] = useState<string | null>(null)
 
   function fetchOrders() {
     setLoading(true)
@@ -49,7 +54,7 @@ function OrdersTable() {
     }
   }
 
-  const COLUMNS = ["Order ID", "Email", "Items", "File Name", "Status", "Created At", "Updated At", "Actions"]
+  const COLUMNS = ["Order ID", "Email", "Items", "Status", "Created At", "View", "Actions"]
 
   return (
     <Stack gap="4">
@@ -95,10 +100,9 @@ function OrdersTable() {
                 const status = order.orderStatus?.toLowerCase() ?? "pending"
                 return (
                   <Table.Row key={order.orderId} _hover={{ bg: "gray.50" }} transition="background 0.15s">
-                    <Table.Cell py={3} px={4} color="gray.700" fontWeight="medium">{order.orderId}</Table.Cell>
+                    <Table.Cell py={3} px={4} color="gray.700" fontWeight="medium" fontSize="xs">{order.orderId}</Table.Cell>
                     <Table.Cell py={3} px={4} color="gray.600">{order.email}</Table.Cell>
                     <Table.Cell py={3} px={4} color="gray.600">{order.itemCount}</Table.Cell>
-                    <Table.Cell py={3} px={4} color="gray.500">{order.fileName ?? "—"}</Table.Cell>
                     <Table.Cell py={3} px={4}>
                       <Badge
                         colorPalette={STATUS_COLOR[status] ?? "gray"}
@@ -111,39 +115,60 @@ function OrdersTable() {
                       </Badge>
                     </Table.Cell>
                     <Table.Cell py={3} px={4} color="gray.500" fontSize="sm">{formatDate(order.createdAt)}</Table.Cell>
-                    <Table.Cell py={3} px={4} color="gray.500" fontSize="sm">{formatDate(order.updatedAt)}</Table.Cell>
+                    <Table.Cell py={3} px={4}>
+                      <Button
+                        size="xs"
+                        colorPalette="gray"
+                        variant="outline"
+                        loading={detailLoading === order.orderId}
+                        onClick={() => {
+                          setDetailLoading(order.orderId)
+                          setSelectedOrder(order)
+                          getOrderById(order.orderId)
+                            .then(setOrderDetail)
+                            .finally(() => setDetailLoading(null))
+                        }}
+                      >
+                        View
+                      </Button>
+                    </Table.Cell>
                     <Table.Cell py={3} px={4}>
                       <HStack gap={2}>
-                        <Button
-                          size="xs"
-                          colorPalette="blue"
-                          variant="subtle"
-                          loading={busy === "accept"}
-                          disabled={!!busy}
-                          onClick={() => handleAction(order.orderId, "accept")}
-                        >
-                          Accept
-                        </Button>
-                        <Button
-                          size="xs"
-                          colorPalette="green"
-                          variant="subtle"
-                          loading={busy === "complete"}
-                          disabled={!!busy}
-                          onClick={() => handleAction(order.orderId, "complete")}
-                        >
-                          Complete
-                        </Button>
-                        <Button
-                          size="xs"
-                          colorPalette="red"
-                          variant="subtle"
-                          loading={busy === "cancel"}
-                          disabled={!!busy}
-                          onClick={() => handleAction(order.orderId, "cancel")}
-                        >
-                          Cancel
-                        </Button>
+                        {status === "accepted" ? (
+                          <Button
+                            size="xs"
+                            colorPalette="green"
+                            variant="subtle"
+                            loading={busy === "complete"}
+                            disabled={!!busy}
+                            onClick={() => handleAction(order.orderId, "complete")}
+                          >
+                            Complete
+                          </Button>
+                        ) : status === "pending" || status === "approval_pending" ? (
+                          <>
+                            <Button
+                              size="xs"
+                              colorPalette="blue"
+                              variant="subtle"
+                              loading={busy === "accept"}
+                              disabled={!!busy}
+                              onClick={() => handleAction(order.orderId, "accept")}
+                            >
+                              Accept
+                            </Button>
+                            <Button
+                              size="xs"
+                              colorPalette="red"
+                              variant="subtle"
+                              loading={busy === "cancel"}
+                              disabled={!!busy}
+                              onClick={() => handleAction(order.orderId, "cancel")}
+                            >
+                              Reject
+                            </Button>
+                          </>
+                        ) : null}
                       </HStack>
                     </Table.Cell>
                   </Table.Row>
@@ -157,6 +182,13 @@ function OrdersTable() {
           No orders found.
         </Text>
       )}
+
+      <OrderDetailModal
+        order={selectedOrder}
+        orderDetail={orderDetail}
+        open={!!selectedOrder}
+        onClose={() => { setSelectedOrder(null); setOrderDetail(null) }}
+      />
     </Stack>
   )
 }
