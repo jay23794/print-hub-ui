@@ -12,7 +12,37 @@ import {
 } from "@chakra-ui/react"
 import { FiSearch } from "react-icons/fi"
 
-function OrderFilters() {
+const STATUS_OPTIONS = [
+  { label: "Pending",           value: "pending" },
+  { label: "Cancel / Rejected", value: "cancelled" },
+  { label: "Success",           value: "completed" },
+]
+
+const RANGE_OPTIONS = [
+  { label: "Last 24 Hours", value: "24h" },
+  { label: "Last 3 Days",   value: "3d" },
+  { label: "Last 7 Days",   value: "7d" },
+]
+
+interface OrderFiltersProps {
+  searchId: string
+  onSearchIdChange: (v: string) => void
+  status: string | null
+  onStatusChange: (v: string | null) => void
+  range: string | null
+  onRangeChange: (v: string | null) => void
+  onReset: () => void
+}
+
+function OrderFilters({
+  searchId,
+  onSearchIdChange,
+  status,
+  onStatusChange,
+  range,
+  onRangeChange,
+  onReset,
+}: OrderFiltersProps) {
   const [fromDate, setFromDate] = useState("")
   const [toDate, setToDate] = useState("")
   const [dateError, setDateError] = useState("")
@@ -39,6 +69,15 @@ function OrderFilters() {
     setFromDate("")
     setToDate("")
     setDateError("")
+    onReset()
+  }
+
+  function toggleStatus(value: string) {
+    onStatusChange(status === value ? null : value)
+  }
+
+  function toggleRange(value: string) {
+    onRangeChange(range === value ? null : value)
   }
 
   return (
@@ -79,7 +118,13 @@ function OrderFilters() {
         {/* Search */}
         <Box pt={3} pb={3}>
           <InputGroup width="full" startElement={<FiSearch size={14} color="gray" />}>
-            <Input placeholder="Search..." size="sm" borderRadius="md" />
+            <Input
+              placeholder="Search by Order ID..."
+              size="sm"
+              borderRadius="md"
+              value={searchId}
+              onChange={(e) => onSearchIdChange(e.target.value)}
+            />
           </InputGroup>
         </Box>
 
@@ -91,29 +136,20 @@ function OrderFilters() {
             STATUS
           </Text>
           <Stack gap={2}>
-            <Checkbox.Root variant="solid">
-              <Checkbox.HiddenInput />
-              <Checkbox.Control />
-              <Checkbox.Label>
-                <Text fontSize="sm" color="gray.700">Pending</Text>
-              </Checkbox.Label>
-            </Checkbox.Root>
-
-            <Checkbox.Root variant="solid">
-              <Checkbox.HiddenInput />
-              <Checkbox.Control />
-              <Checkbox.Label>
-                <Text fontSize="sm" color="gray.700">Cancel / Rejected</Text>
-              </Checkbox.Label>
-            </Checkbox.Root>
-
-            <Checkbox.Root variant="solid">
-              <Checkbox.HiddenInput />
-              <Checkbox.Control />
-              <Checkbox.Label>
-                <Text fontSize="sm" color="gray.700">Success</Text>
-              </Checkbox.Label>
-            </Checkbox.Root>
+            {STATUS_OPTIONS.map((opt) => (
+              <Checkbox.Root
+                key={opt.value}
+                variant="solid"
+                checked={status === opt.value}
+                onCheckedChange={() => toggleStatus(opt.value)}
+              >
+                <Checkbox.HiddenInput />
+                <Checkbox.Control />
+                <Checkbox.Label>
+                  <Text fontSize="sm" color="gray.700">{opt.label}</Text>
+                </Checkbox.Label>
+              </Checkbox.Root>
+            ))}
           </Stack>
         </Box>
 
@@ -125,29 +161,20 @@ function OrderFilters() {
             QUICK RANGE
           </Text>
           <Stack gap={2}>
-            <Checkbox.Root variant="solid">
-              <Checkbox.HiddenInput />
-              <Checkbox.Control />
-              <Checkbox.Label>
-                <Text fontSize="sm" color="gray.700">Last 24 Hours</Text>
-              </Checkbox.Label>
-            </Checkbox.Root>
-
-            <Checkbox.Root variant="solid">
-              <Checkbox.HiddenInput />
-              <Checkbox.Control />
-              <Checkbox.Label>
-                <Text fontSize="sm" color="gray.700">Last 3 Days</Text>
-              </Checkbox.Label>
-            </Checkbox.Root>
-
-            <Checkbox.Root variant="solid">
-              <Checkbox.HiddenInput />
-              <Checkbox.Control />
-              <Checkbox.Label>
-                <Text fontSize="sm" color="gray.700">Last 7 Days</Text>
-              </Checkbox.Label>
-            </Checkbox.Root>
+            {RANGE_OPTIONS.map((opt) => (
+              <Checkbox.Root
+                key={opt.value}
+                variant="solid"
+                checked={range === opt.value}
+                onCheckedChange={() => toggleRange(opt.value)}
+              >
+                <Checkbox.HiddenInput />
+                <Checkbox.Control />
+                <Checkbox.Label>
+                  <Text fontSize="sm" color="gray.700">{opt.label}</Text>
+                </Checkbox.Label>
+              </Checkbox.Root>
+            ))}
           </Stack>
         </Box>
 

@@ -1,6 +1,6 @@
 import { Badge, Button, HStack, Skeleton, Stack, Table, Text } from "@chakra-ui/react"
-import { useEffect, useState } from "react"
-import { getAllOrders, acceptOrder, completeOrder, cancelOrder, getOrderById } from "../../services/orders.service"
+import { useEffect, useRef, useState } from "react"
+import { searchOrders, acceptOrder, completeOrder, cancelOrder, getOrderById } from "../../services/orders.service"
 import type { OrderActionResponse, OrderItem } from "../../services/orders.service"
 import OrderDetailModal from "./OrderDetailModal"
 
@@ -16,35 +16,66 @@ function formatDate(date: Date | string) {
   return new Date(date).toLocaleString()
 }
 
-function OrdersTable() {
+interface OrdersTableProps {
+  searchId: string
+  status: string | null
+  range: string | null
+}
+
+function OrdersTable({ searchId, status, range }: OrdersTableProps) {
   const [orders, setOrders] = useState<OrderActionResponse[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [nextCursor, setNextCursor] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState<Record<string, string>>({})
   const [selectedOrder, setSelectedOrder] = useState<OrderActionResponse | null>(null)
   const [orderDetail, setOrderDetail] = useState<OrderItem[] | null>(null)
   const [detailLoading, setDetailLoading] = useState<string | null>(null)
 
-  function fetchOrders() {
-    setLoading(true)
-    getAllOrders()
-      .then(setOrders)
-      .finally(() => setLoading(false))
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  function fetchOrders(cursor?: string) {
+    const isLoadMore = !!cursor
+    if (isLoadMore) setLoadingMore(true)
+    else setLoading(true)
+
+    searchOrders({ id: searchId || undefined, status: status ?? undefined, range: range ?? undefined, cursor })
+      .then(({ orders: newOrders, nextCursor: nc }) => {
+        setOrders((prev) => isLoadMore ? [...prev, ...newOrders] : newOrders)
+        setNextCursor(nc)
+      })
+      .finally(() => {
+        setLoading(false)
+        setLoadingMore(false)
+      })
   }
 
   useEffect(() => {
-    fetchOrders()
-  }, [])
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      setOrders([])
+      setNextCursor(null)
+      fetchOrders()
+    }, searchId ? 400 : 0)
 
-  async function handleAction(
-    orderId: string,
-    action: "accept" | "complete" | "cancel"
-  ) {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [searchId, status, range])
+
+  function reloadCurrent() {
+    setOrders([])
+    setNextCursor(null)
+    fetchOrders()
+  }
+
+  async function handleAction(orderId: string, action: "accept" | "complete" | "cancel") {
     setActionLoading((prev) => ({ ...prev, [orderId]: action }))
     try {
       if (action === "accept")   await acceptOrder(orderId)
       if (action === "complete") await completeOrder(orderId)
       if (action === "cancel")   await cancelOrder(orderId)
-      fetchOrders()
+      reloadCurrent()
     } finally {
       setActionLoading((prev) => {
         const next = { ...prev }
@@ -183,11 +214,27 @@ function OrdersTable() {
         </Text>
       )}
 
+      {!loading && nextCursor && (
+        <Button
+          size="sm"
+          variant="outline"
+          colorPalette="gray"
+          alignSelf="center"
+          loading={loadingMore}
+          onClick={() => fetchOrders(nextCursor)}
+        >
+          Load More
+        </Button>
+      )}
+
       <OrderDetailModal
         order={selectedOrder}
         orderDetail={orderDetail}
         open={!!selectedOrder}
         onClose={() => { setSelectedOrder(null); setOrderDetail(null) }}
+        onAccept={() => selectedOrder && handleAction(selectedOrder.orderId, "accept")}
+        onReject={() => selectedOrder && handleAction(selectedOrder.orderId, "cancel")}
+        actionBusy={selectedOrder ? actionLoading[selectedOrder.orderId] : undefined}
       />
     </Stack>
   )

@@ -5,6 +5,7 @@ import {
   Dialog,
   Grid,
   GridItem,
+  HStack,
   Spinner,
   Table,
   Text,
@@ -41,9 +42,12 @@ interface Props {
   orderDetail: OrderItem[] | null
   open: boolean
   onClose: () => void
+  onAccept?: () => void
+  onReject?: () => void
+  actionBusy?: string
 }
 
-function OrderDetailModal({ order, orderDetail, open, onClose }: Props) {
+function OrderDetailModal({ order, orderDetail, open, onClose, onAccept, onReject, actionBusy }: Props) {
   if (!order) return null
 
   const status = order.orderStatus?.toLowerCase() ?? "pending"
@@ -153,6 +157,33 @@ function OrderDetailModal({ order, orderDetail, open, onClose }: Props) {
               </Box>
             )}
           </Dialog.Body>
+
+          {(status === "pending" || status === "approval_pending") && (
+            <Dialog.Footer pt={4} borderTop="1px solid" borderColor="gray.100">
+              <HStack gap={3} justify="flex-end">
+                <Button
+                  size="sm"
+                  colorPalette="blue"
+                  variant="subtle"
+                  loading={actionBusy === "accept"}
+                  disabled={!!actionBusy}
+                  onClick={onAccept}
+                >
+                  Accept
+                </Button>
+                <Button
+                  size="sm"
+                  colorPalette="red"
+                  variant="subtle"
+                  loading={actionBusy === "cancel"}
+                  disabled={!!actionBusy}
+                  onClick={onReject}
+                >
+                  Reject
+                </Button>
+              </HStack>
+            </Dialog.Footer>
+          )}
         </Dialog.Content>
       </Dialog.Positioner>
     </Dialog.Root>

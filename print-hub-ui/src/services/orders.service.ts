@@ -21,6 +21,36 @@ export interface OrderItem {
   printType: string
 }
 
+export interface SearchOrdersParams {
+  id?: string
+  status?: string
+  range?: string
+  cursor?: string
+}
+
+export interface SearchOrdersResult {
+  orders: OrderActionResponse[]
+  nextCursor: string | null
+}
+
+export async function searchOrders(params: SearchOrdersParams): Promise<SearchOrdersResult> {
+  const query = new URLSearchParams()
+  if (params.id)     query.set("id", params.id)
+  if (params.status) query.set("status", params.status)
+  if (params.range)  query.set("range", params.range)
+  if (params.cursor) query.set("cursor", params.cursor)
+
+  const url = `/admin/order/search${query.toString() ? `?${query}` : ""}`
+
+  if (params.id) {
+    const res = await apiGet<{ data: OrderActionResponse }>(url)
+    return { orders: [res.data], nextCursor: null }
+  }
+
+  const res = await apiGet<{ data: OrderActionResponse[]; nextCursor: string | null }>(url)
+  return { orders: res.data ?? [], nextCursor: res.nextCursor ?? null }
+}
+
 export async function getOrderById(id: string): Promise<OrderItem[]> {
   const res = await apiGet<{ data: { items: OrderItem[] } }>(`/admin/order/get/${id}`)
   return res.data.items

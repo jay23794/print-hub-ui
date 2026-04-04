@@ -7,6 +7,7 @@ import {
   Spacer,
   Stack,
 } from "@chakra-ui/react"
+import { useState } from "react"
 import { useNavigate } from "react-router"
 import { LuLogOut } from "react-icons/lu"
 import { useAuth } from "../contexts/AuthContext"
@@ -20,6 +21,16 @@ import OrderFilters from "../components/orders/OrderFilters"
 function Dashboard() {
   const { logout } = useAuth()
   const navigate = useNavigate()
+
+  const [searchId, setSearchId] = useState("")
+  const [status, setStatus] = useState<string | null>(null)
+  const [range, setRange] = useState<string | null>(null)
+
+  function handleReset() {
+    setSearchId("")
+    setStatus(null)
+    setRange(null)
+  }
 
   function handleLogout() {
     logout()
@@ -58,7 +69,15 @@ function Dashboard() {
       <Flex gap={5} px={6} py={6} align="flex-start">
         {/* Sidebar Filters */}
         <Box flexShrink={0} w="220px">
-          <OrderFilters />
+          <OrderFilters
+            searchId={searchId}
+            onSearchIdChange={setSearchId}
+            status={status}
+            onStatusChange={setStatus}
+            range={range}
+            onRangeChange={setRange}
+            onReset={handleReset}
+          />
         </Box>
 
         {/* Main Content */}
@@ -68,15 +87,12 @@ function Dashboard() {
 
           {/* Orders Table */}
           <Box
-          
             borderRadius="xl"
             border="1px solid"
             borderColor="gray.200"
-           
             pb={2}
           >
-          
-            <OrdersTable />
+            <OrdersTable searchId={searchId} status={status} range={range} />
           </Box>
         </Stack>
       </Flex>
