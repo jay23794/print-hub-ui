@@ -1,8 +1,11 @@
-import { Badge, Button, HStack, Skeleton, Stack, Table, Text } from "@chakra-ui/react"
+import { Badge, Button, Flex, HStack, Skeleton, Stack, Table, Text } from "@chakra-ui/react"
 import { useEffect, useRef, useState } from "react"
 import { searchOrders, acceptOrder, completeOrder, cancelOrder, getOrderById } from "../../services/orders.service"
 import type { OrderActionResponse, OrderItem } from "../../services/orders.service"
 import OrderDetailModal from "./OrderDetailModal"
+import AppPagination from "../common/Pagination"
+
+const PAGE_SIZE = 10
 
 const STATUS_COLOR: Record<string, string> = {
   pending:          "orange",
@@ -25,8 +28,8 @@ interface OrdersTableProps {
 function OrdersTable({ searchId, status, range }: OrdersTableProps) {
   const [orders, setOrders] = useState<OrderActionResponse[]>([])
   const [loading, setLoading] = useState(true)
-  const [loadingMore, setLoadingMore] = useState(false)
-  const [nextCursor, setNextCursor] = useState<string | null>(null)
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
   const [actionLoading, setActionLoading] = useState<Record<string, string>>({})
   const [selectedOrder, setSelectedOrder] = useState<OrderActionResponse | null>(null)
   const [orderDetail, setOrderDetail] = useState<OrderItem[] | null>(null)
@@ -34,28 +37,30 @@ function OrdersTable({ searchId, status, range }: OrdersTableProps) {
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  function fetchOrders(cursor?: string) {
-    const isLoadMore = !!cursor
-    if (isLoadMore) setLoadingMore(true)
-    else setLoading(true)
-
-    searchOrders({ id: searchId || undefined, status: status ?? undefined, range: range ?? undefined, cursor })
-      .then(({ orders: newOrders, nextCursor: nc }) => {
-        setOrders((prev) => isLoadMore ? [...prev, ...newOrders] : newOrders)
-        setNextCursor(nc)
+  function fetchOrders(targetPage: number) {
+    setLoading(true)
+    searchOrders({
+      id: searchId || undefined,
+      status: status ?? undefined,
+      range: range ?? undefined,
+      page: targetPage,
+      limit: PAGE_SIZE,
+    })
+      .then(({ orders: newOrders, total: t }) => {
+        setOrders(newOrders)
+        setTotal(t)
       })
-      .finally(() => {
-        setLoading(false)
-        setLoadingMore(false)
-      })
+      .finally(() => setLoading(false))
   }
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
-      setOrders([])
-      setNextCursor(null)
-      fetchOrders()
+      if (page !== 1) {
+        setPage(1)
+      } else {
+        fetchOrders(1)
+      }
     }, searchId ? 400 : 0)
 
     return () => {
@@ -63,10 +68,12 @@ function OrdersTable({ searchId, status, range }: OrdersTableProps) {
     }
   }, [searchId, status, range])
 
+  useEffect(() => {
+    fetchOrders(page)
+  }, [page])
+
   function reloadCurrent() {
-    setOrders([])
-    setNextCursor(null)
-    fetchOrders()
+    fetchOrders(page)
   }
 
   async function handleAction(orderId: string, action: "accept" | "complete" | "cancel") {
@@ -214,17 +221,15 @@ function OrdersTable({ searchId, status, range }: OrdersTableProps) {
         </Text>
       )}
 
-      {!loading && nextCursor && (
-        <Button
-          size="sm"
-          variant="outline"
-          colorPalette="gray"
-          alignSelf="center"
-          loading={loadingMore}
-          onClick={() => fetchOrders(nextCursor)}
-        >
-          Load More
-        </Button>
+      {!loading && total > PAGE_SIZE && (
+        <Flex justify="center" pb={2}>
+          <AppPagination
+            count={total}
+            pageSize={PAGE_SIZE}
+            page={page}
+            onPageChange={(p) => setPage(p)}
+          />
+        </Flex>
       )}
 
       <OrderDetailModal

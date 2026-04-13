@@ -25,12 +25,13 @@ export interface SearchOrdersParams {
   id?: string
   status?: string
   range?: string
-  cursor?: string
+  page?: number
+  limit?: number
 }
 
 export interface SearchOrdersResult {
   orders: OrderActionResponse[]
-  nextCursor: string | null
+  total: number
 }
 
 export async function searchOrders(params: SearchOrdersParams): Promise<SearchOrdersResult> {
@@ -38,17 +39,18 @@ export async function searchOrders(params: SearchOrdersParams): Promise<SearchOr
   if (params.id)     query.set("id", params.id)
   if (params.status) query.set("status", params.status)
   if (params.range)  query.set("range", params.range)
-  if (params.cursor) query.set("cursor", params.cursor)
+  if (params.page  != null) query.set("page", String(params.page))
+  if (params.limit != null) query.set("limit", String(params.limit))
 
   const url = `/admin/order/search${query.toString() ? `?${query}` : ""}`
 
   if (params.id) {
     const res = await apiGet<{ data: OrderActionResponse }>(url)
-    return { orders: [res.data], nextCursor: null }
+    return { orders: [res.data], total: 1 }
   }
 
-  const res = await apiGet<{ data: OrderActionResponse[]; nextCursor: string | null }>(url)
-  return { orders: res.data ?? [], nextCursor: res.nextCursor ?? null }
+  const res = await apiGet<{ data: OrderActionResponse[]; total: number }>(url)
+  return { orders: res.data ?? [], total: res.total ?? 0 }
 }
 
 export async function getOrderById(id: string): Promise<OrderItem[]> {
