@@ -11,7 +11,12 @@ import {
   Text,
 } from "@chakra-ui/react"
 import { FiSearch } from "react-icons/fi"
-import { ORDER_STAGES, STATUSES_BY_STAGE } from "../../constants/orderStatus.constants"
+import {
+  ORDER_STAGES,
+  STATUSES_BY_STAGE,
+  PAYMENT_STATUSES,
+  PAYMENT_STATUS_META,
+} from "../../constants/orderStatus.constants"
 
 const RANGE_OPTIONS = [
   { label: "Last 24 Hours", value: "24h" },
@@ -24,6 +29,8 @@ interface OrderFiltersProps {
   onSearchIdChange: (v: string) => void
   status: string | null
   onStatusChange: (v: string | null) => void
+  paymentStatus: string | null
+  onPaymentStatusChange: (v: string | null) => void
   range: string | null
   onRangeChange: (v: string | null) => void
   onReset: () => void
@@ -34,6 +41,8 @@ function OrderFilters({
   onSearchIdChange,
   status,
   onStatusChange,
+  paymentStatus,
+  onPaymentStatusChange,
   range,
   onRangeChange,
   onReset,
@@ -69,6 +78,10 @@ function OrderFilters({
 
   function toggleStatus(value: string) {
     onStatusChange(status === value ? null : value)
+  }
+
+  function togglePaymentStatus(value: string) {
+    onPaymentStatusChange(paymentStatus === value ? null : value)
   }
 
   function toggleRange(value: string) {
@@ -125,10 +138,10 @@ function OrderFilters({
 
         <Separator borderColor="gray.100" />
 
-        {/* Status */}
+        {/* Order Status */}
         <Box pt={3} pb={3}>
           <Text fontSize="xs" fontWeight="700" letterSpacing="wider" color="gray.400" mb={2}>
-            STATUS
+            ORDER STATUS
           </Text>
           <Stack gap={3}>
             {ORDER_STAGES.map((stage) => (
@@ -153,6 +166,33 @@ function OrderFilters({
                   ))}
                 </Stack>
               </Box>
+            ))}
+          </Stack>
+        </Box>
+
+        <Separator borderColor="gray.100" />
+
+        {/* Payment Status */}
+        <Box pt={3} pb={3}>
+          <Text fontSize="xs" fontWeight="700" letterSpacing="wider" color="gray.400" mb={2}>
+            PAYMENT STATUS
+          </Text>
+          <Stack gap={1.5} pl={1}>
+            {PAYMENT_STATUSES.map((code) => (
+              <Checkbox.Root
+                key={code}
+                variant="solid"
+                checked={paymentStatus === code}
+                onCheckedChange={() => togglePaymentStatus(code)}
+              >
+                <Checkbox.HiddenInput />
+                <Checkbox.Control />
+                <Checkbox.Label>
+                  <Text fontSize="sm" color="gray.700">
+                    {PAYMENT_STATUS_META[code].label}
+                  </Text>
+                </Checkbox.Label>
+              </Checkbox.Root>
             ))}
           </Stack>
         </Box>

@@ -5,6 +5,7 @@ import React from 'react'
 import { system } from './chakra.ts'
 import { BrowserRouter } from 'react-router'
 import { AuthProvider } from './contexts/AuthContext.tsx'
+import { AppToaster } from './lib/toaster.tsx'
 
 createRoot(document.getElementById('root')!).render(
 
@@ -13,6 +14,7 @@ createRoot(document.getElementById('root')!).render(
       <ChakraProvider value={system}>
         <AuthProvider>
           <App />
+          <AppToaster />
         </AuthProvider>
       </ChakraProvider>
     </BrowserRouter>

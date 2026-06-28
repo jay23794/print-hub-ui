@@ -38,14 +38,33 @@ interface Props {
   onClose: () => void
   onAccept?: () => void
   onReject?: () => void
+  onDispatch?: () => void
+  onMarkDelivered?: () => void
   actionBusy?: string
 }
 
-function OrderDetailModal({ order, orderDetail, open, onClose, onAccept, onReject, actionBusy }: Props) {
+const DISPATCHABLE = new Set(["ACCEPTED", "PRINTING", "PRINTED", "PACKED"])
+
+function OrderDetailModal({
+  order,
+  orderDetail,
+  open,
+  onClose,
+  onAccept,
+  onReject,
+  onDispatch,
+  onMarkDelivered,
+  actionBusy,
+}: Props) {
   if (!order) return null
 
   const statusCode = normalizeOrderStatus(order.orderStatus)
   const statusMeta = getStatusMeta(order.orderStatus)
+
+  const showDispatch = DISPATCHABLE.has(statusCode)
+  const showDelivered = statusCode === "OUT_FOR_DELIVERY"
+  const showFooter =
+    statusCode === "PENDING_ACCEPTANCE" || showDispatch || showDelivered
 
   return (
     <Dialog.Root open={open} onOpenChange={(e) => { if (!e.open) onClose() }} size="xl">
@@ -155,29 +174,57 @@ function OrderDetailModal({ order, orderDetail, open, onClose, onAccept, onRejec
             )}
           </Dialog.Body>
 
-          {statusCode === "PENDING_ACCEPTANCE" && (
+          {showFooter && (
             <Dialog.Footer pt={4} borderTop="1px solid" borderColor="gray.100">
               <HStack gap={3} justify="flex-end">
-                <Button
-                  size="sm"
-                  colorPalette="blue"
-                  variant="subtle"
-                  loading={actionBusy === "accept"}
-                  disabled={!!actionBusy}
-                  onClick={onAccept}
-                >
-                  Accept
-                </Button>
-                <Button
-                  size="sm"
-                  colorPalette="red"
-                  variant="subtle"
-                  loading={actionBusy === "cancel"}
-                  disabled={!!actionBusy}
-                  onClick={onReject}
-                >
-                  Reject
-                </Button>
+                {statusCode === "PENDING_ACCEPTANCE" && (
+                  <>
+                    <Button
+                      size="sm"
+                      colorPalette="blue"
+                      variant="subtle"
+                      loading={actionBusy === "accept"}
+                      disabled={!!actionBusy}
+                      onClick={onAccept}
+                    >
+                      Accept
+                    </Button>
+                    <Button
+                      size="sm"
+                      colorPalette="red"
+                      variant="subtle"
+                      loading={actionBusy === "cancel"}
+                      disabled={!!actionBusy}
+                      onClick={onReject}
+                    >
+                      Reject
+                    </Button>
+                  </>
+                )}
+                {showDispatch && onDispatch && (
+                  <Button
+                    size="md"
+                    colorPalette="purple"
+                    variant="solid"
+                    loading={actionBusy === "dispatch"}
+                    disabled={!!actionBusy}
+                    onClick={onDispatch}
+                  >
+                    Mark out for delivery
+                  </Button>
+                )}
+                {showDelivered && onMarkDelivered && (
+                  <Button
+                    size="md"
+                    colorPalette="green"
+                    variant="solid"
+                    loading={actionBusy === "delivered"}
+                    disabled={!!actionBusy}
+                    onClick={onMarkDelivered}
+                  >
+                    Mark delivered
+                  </Button>
+                )}
               </HStack>
             </Dialog.Footer>
           )}

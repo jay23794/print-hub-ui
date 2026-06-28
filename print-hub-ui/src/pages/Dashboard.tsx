@@ -24,11 +24,13 @@ function Dashboard() {
 
   const [searchId, setSearchId] = useState("")
   const [status, setStatus] = useState<string | null>(null)
+  const [paymentStatus, setPaymentStatus] = useState<string | null>(null)
   const [range, setRange] = useState<string | null>(null)
 
   function handleReset() {
     setSearchId("")
     setStatus(null)
+    setPaymentStatus(null)
     setRange(null)
   }
 
@@ -74,6 +76,8 @@ function Dashboard() {
             onSearchIdChange={setSearchId}
             status={status}
             onStatusChange={setStatus}
+            paymentStatus={paymentStatus}
+            onPaymentStatusChange={setPaymentStatus}
             range={range}
             onRangeChange={setRange}
             onReset={handleReset}
@@ -92,7 +96,12 @@ function Dashboard() {
             borderColor="gray.200"
             pb={2}
           >
-            <OrdersTable searchId={searchId} status={status} range={range} />
+            <OrdersTable
+              searchId={searchId}
+              status={status}
+              paymentStatus={paymentStatus}
+              range={range}
+            />
           </Box>
         </Stack>
       </Flex>

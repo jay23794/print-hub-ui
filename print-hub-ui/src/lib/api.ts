@@ -4,6 +4,27 @@ function getToken() {
   return localStorage.getItem("id_token")
 }
 
+export class ApiError extends Error {
+  status: number
+  body: unknown
+
+  constructor(status: number, message: string, body?: unknown) {
+    super(message)
+    this.name = "ApiError"
+    this.status = status
+    this.body = body
+  }
+}
+
+async function parseError(res: Response): Promise<ApiError> {
+  const body = await res.json().catch(() => ({} as Record<string, unknown>))
+  const message =
+    (body && typeof (body as { message?: string }).message === "string"
+      ? (body as { message: string }).message
+      : null) ?? "Request failed"
+  return new ApiError(res.status, message, body)
+}
+
 export async function apiGet<T>(path: string): Promise<T> {
   const token = getToken()
 
@@ -15,11 +36,7 @@ export async function apiGet<T>(path: string): Promise<T> {
     },
   })
 
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    throw new Error(err.message ?? "Request failed")
-  }
-
+  if (!res.ok) throw await parseError(res)
   return res.json()
 }
 
@@ -35,11 +52,7 @@ export async function apiPatch<T>(path: string, body: unknown): Promise<T> {
     body: JSON.stringify(body),
   })
 
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    throw new Error(err.message ?? "Request failed")
-  }
-
+  if (!res.ok) throw await parseError(res)
   return res.json()
 }
 
@@ -55,10 +68,6 @@ export async function apiPost<T>(path: string, body: unknown): Promise<T> {
     body: JSON.stringify(body),
   })
 
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    throw new Error(err.message ?? "Request failed")
-  }
-
+  if (!res.ok) throw await parseError(res)
   return res.json()
 }
