@@ -4,16 +4,9 @@ import { searchOrders, acceptOrder, completeOrder, cancelOrder, getOrderById } f
 import type { OrderActionResponse, OrderItem } from "../../services/orders.service"
 import OrderDetailModal from "./OrderDetailModal"
 import AppPagination from "../common/Pagination"
+import { getStatusMeta, normalizeOrderStatus } from "../../constants/orderStatus.constants"
 
 const PAGE_SIZE = 10
-
-const STATUS_COLOR: Record<string, string> = {
-  pending:          "orange",
-  approval_pending: "yellow",
-  accepted:         "blue",
-  completed:        "green",
-  cancelled:        "red",
-}
 
 function formatDate(date: Date | string) {
   return new Date(date).toLocaleString()
@@ -135,22 +128,25 @@ function OrdersTable({ searchId, status, range }: OrdersTableProps) {
               ))
             : orders.map((order) => {
                 const busy = actionLoading[order.orderId]
-                const status = order.orderStatus?.toLowerCase() ?? "pending"
+                const statusCode = normalizeOrderStatus(order.orderStatus)
+                const statusMeta = getStatusMeta(order.orderStatus)
                 return (
                   <Table.Row key={order.orderId} _hover={{ bg: "gray.50" }} transition="background 0.15s">
                     <Table.Cell py={3} px={4} color="gray.700" fontWeight="medium" fontSize="xs">{order.orderId}</Table.Cell>
                     <Table.Cell py={3} px={4} color="gray.600">{order.email}</Table.Cell>
                     <Table.Cell py={3} px={4} color="gray.600">{order.itemCount}</Table.Cell>
                     <Table.Cell py={3} px={4}>
-                      <Badge
-                        colorPalette={STATUS_COLOR[status] ?? "gray"}
-                        variant="subtle"
-                        borderRadius="full"
-                        px={2}
-                        textTransform="capitalize"
-                      >
-                        {order.orderStatus ?? "Pending"}
-                      </Badge>
+                      <Stack gap={1} align="flex-start">
+                        <Badge
+                          colorPalette={statusMeta.color}
+                          variant="subtle"
+                          borderRadius="full"
+                          px={2}
+                        >
+                          {statusMeta.label}
+                        </Badge>
+                        <Text fontSize="xs" color="gray.400">{statusMeta.stage}</Text>
+                      </Stack>
                     </Table.Cell>
                     <Table.Cell py={3} px={4} color="gray.500" fontSize="sm">{formatDate(order.createdAt)}</Table.Cell>
                     <Table.Cell py={3} px={4}>
@@ -172,18 +168,7 @@ function OrdersTable({ searchId, status, range }: OrdersTableProps) {
                     </Table.Cell>
                     <Table.Cell py={3} px={4}>
                       <HStack gap={2}>
-                        {status === "accepted" ? (
-                          <Button
-                            size="xs"
-                            colorPalette="green"
-                            variant="subtle"
-                            loading={busy === "complete"}
-                            disabled={!!busy}
-                            onClick={() => handleAction(order.orderId, "complete")}
-                          >
-                            Complete
-                          </Button>
-                        ) : status === "pending" || status === "approval_pending" ? (
+                        {statusCode === "PENDING_ACCEPTANCE" ? (
                           <>
                             <Button
                               size="xs"
@@ -206,7 +191,20 @@ function OrdersTable({ searchId, status, range }: OrdersTableProps) {
                               Reject
                             </Button>
                           </>
-                        ) : null}
+                        ) : statusCode === "ACCEPTED" || statusCode === "PRINTING" || statusCode === "PRINTED" || statusCode === "PACKED" || statusCode === "OUT_FOR_DELIVERY" ? (
+                          <Button
+                            size="xs"
+                            colorPalette="green"
+                            variant="subtle"
+                            loading={busy === "complete"}
+                            disabled={!!busy}
+                            onClick={() => handleAction(order.orderId, "complete")}
+                          >
+                            Mark Delivered
+                          </Button>
+                        ) : (
+                          <Text fontSize="xs" color="gray.400">—</Text>
+                        )}
                       </HStack>
                     </Table.Cell>
                   </Table.Row>

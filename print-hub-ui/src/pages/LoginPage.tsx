@@ -110,6 +110,20 @@ function LoginPage() {
             >
               Sign In
             </Button>
+
+            {/* TEMP: game UI preview */}
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              w="full"
+              color="gray.400"
+              fontSize="xs"
+              _hover={{ color: "gray.600" }}
+              onClick={() => navigate("/game-preview")}
+            >
+              Preview Game UI →
+            </Button>
           </Stack>
         </form>
       </Box>

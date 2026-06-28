@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router"
 import LoginPage from "./pages/LoginPage"
 import Dashboard from "./pages/Dashboard"
 import ProfilePage from "./pages/ProfilePage"
+import GamePreviewPage from "./pages/GamePreviewPage"
 import { useAuth } from "./contexts/AuthContext"
 import type { JSX } from "react"
 
@@ -19,6 +20,8 @@ function App() {
   return (
     <Routes>
       <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
+      {/* TEMP: game UI preview */}
+      <Route path="/game-preview" element={<GamePreviewPage />} />
       <Route
         path="/"
         element={

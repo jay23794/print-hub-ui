@@ -11,12 +11,7 @@ import {
   Text,
 } from "@chakra-ui/react"
 import { FiSearch } from "react-icons/fi"
-
-const STATUS_OPTIONS = [
-  { label: "Pending",           value: "pending" },
-  { label: "Cancel / Rejected", value: "cancelled" },
-  { label: "Success",           value: "completed" },
-]
+import { ORDER_STAGES, STATUSES_BY_STAGE } from "../../constants/orderStatus.constants"
 
 const RANGE_OPTIONS = [
   { label: "Last 24 Hours", value: "24h" },
@@ -135,20 +130,29 @@ function OrderFilters({
           <Text fontSize="xs" fontWeight="700" letterSpacing="wider" color="gray.400" mb={2}>
             STATUS
           </Text>
-          <Stack gap={2}>
-            {STATUS_OPTIONS.map((opt) => (
-              <Checkbox.Root
-                key={opt.value}
-                variant="solid"
-                checked={status === opt.value}
-                onCheckedChange={() => toggleStatus(opt.value)}
-              >
-                <Checkbox.HiddenInput />
-                <Checkbox.Control />
-                <Checkbox.Label>
-                  <Text fontSize="sm" color="gray.700">{opt.label}</Text>
-                </Checkbox.Label>
-              </Checkbox.Root>
+          <Stack gap={3}>
+            {ORDER_STAGES.map((stage) => (
+              <Box key={stage}>
+                <Text fontSize="2xs" fontWeight="700" letterSpacing="wider" color="gray.500" mb={1}>
+                  {stage.toUpperCase()}
+                </Text>
+                <Stack gap={1.5} pl={1}>
+                  {STATUSES_BY_STAGE[stage].map((opt) => (
+                    <Checkbox.Root
+                      key={opt.code}
+                      variant="solid"
+                      checked={status === opt.code}
+                      onCheckedChange={() => toggleStatus(opt.code)}
+                    >
+                      <Checkbox.HiddenInput />
+                      <Checkbox.Control />
+                      <Checkbox.Label>
+                        <Text fontSize="sm" color="gray.700">{opt.label}</Text>
+                      </Checkbox.Label>
+                    </Checkbox.Root>
+                  ))}
+                </Stack>
+              </Box>
             ))}
           </Stack>
         </Box>

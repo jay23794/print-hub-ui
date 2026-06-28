@@ -7,18 +7,12 @@ import {
   GridItem,
   HStack,
   Spinner,
+  Stack,
   Table,
   Text,
 } from "@chakra-ui/react"
 import type { OrderActionResponse, OrderItem } from "../../services/orders.service"
-
-const STATUS_COLOR: Record<string, string> = {
-  pending:          "orange",
-  approval_pending: "yellow",
-  accepted:         "blue",
-  completed:        "green",
-  cancelled:        "red",
-}
+import { getStatusMeta, normalizeOrderStatus } from "../../constants/orderStatus.constants"
 
 function formatDate(date: Date | string) {
   return new Date(date).toLocaleString()
@@ -50,7 +44,8 @@ interface Props {
 function OrderDetailModal({ order, orderDetail, open, onClose, onAccept, onReject, actionBusy }: Props) {
   if (!order) return null
 
-  const status = order.orderStatus?.toLowerCase() ?? "pending"
+  const statusCode = normalizeOrderStatus(order.orderStatus)
+  const statusMeta = getStatusMeta(order.orderStatus)
 
   return (
     <Dialog.Root open={open} onOpenChange={(e) => { if (!e.open) onClose() }} size="xl">
@@ -80,15 +75,17 @@ function OrderDetailModal({ order, orderDetail, open, onClose, onAccept, onRejec
               <Field label="Email">{order.email}</Field>
 
               <Field label="Status">
-                <Badge
-                  colorPalette={STATUS_COLOR[status] ?? "gray"}
-                  variant="subtle"
-                  borderRadius="full"
-                  px={2}
-                  textTransform="capitalize"
-                >
-                  {order.orderStatus ?? "Pending"}
-                </Badge>
+                <Stack gap={1} align="flex-start">
+                  <Badge
+                    colorPalette={statusMeta.color}
+                    variant="subtle"
+                    borderRadius="full"
+                    px={2}
+                  >
+                    {statusMeta.label}
+                  </Badge>
+                  <Text fontSize="xs" color="gray.500">{statusMeta.stage} · {statusMeta.description}</Text>
+                </Stack>
               </Field>
 
               <Field label="Created At">{formatDate(order.createdAt)}</Field>
@@ -158,7 +155,7 @@ function OrderDetailModal({ order, orderDetail, open, onClose, onAccept, onRejec
             )}
           </Dialog.Body>
 
-          {(status === "pending" || status === "approval_pending") && (
+          {statusCode === "PENDING_ACCEPTANCE" && (
             <Dialog.Footer pt={4} borderTop="1px solid" borderColor="gray.100">
               <HStack gap={3} justify="flex-end">
                 <Button
