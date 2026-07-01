@@ -3,6 +3,8 @@ import LoginPage from "./pages/LoginPage"
 import Dashboard from "./pages/Dashboard"
 import ProfilePage from "./pages/ProfilePage"
 import GamePreviewPage from "./pages/GamePreviewPage"
+import PrintConfigsPage from "./pages/PrintConfigsPage"
+import PrintConfigFormPage from "./pages/PrintConfigFormPage"
 import { useAuth } from "./contexts/AuthContext"
 import type { JSX } from "react"
 
@@ -35,6 +37,30 @@ function App() {
         element={
           <PrivateRoute>
             <ProfilePage />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/print-configs"
+        element={
+          <PrivateRoute>
+            <PrintConfigsPage />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/print-configs/new"
+        element={
+          <PrivateRoute>
+            <PrintConfigFormPage />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/print-configs/:id/edit"
+        element={
+          <PrivateRoute>
+            <PrintConfigFormPage />
           </PrivateRoute>
         }
       />

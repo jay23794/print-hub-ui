@@ -71,3 +71,18 @@ export async function apiPost<T>(path: string, body: unknown): Promise<T> {
   if (!res.ok) throw await parseError(res)
   return res.json()
 }
+
+export async function apiDelete<T>(path: string): Promise<T> {
+  const token = getToken()
+
+  const res = await fetch(`${BASE_URL}${path}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  })
+
+  if (!res.ok) throw await parseError(res)
+  return res.json()
+}

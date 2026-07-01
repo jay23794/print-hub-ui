@@ -55,6 +55,15 @@ function Dashboard() {
               variant="ghost"
               color="white"
               _hover={{ bg: "gray.700" }}
+              onClick={() => navigate("/print-configs")}
+            >
+              Configs
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              color="white"
+              _hover={{ bg: "gray.700" }}
               onClick={handleLogout}
             >
               <LuLogOut />
