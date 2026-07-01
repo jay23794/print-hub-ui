@@ -1,6 +1,8 @@
 import {
+  Badge,
   Box,
   Button,
+  Dialog,
   Field,
   Flex,
   Grid,
@@ -11,6 +13,7 @@ import {
   Spacer,
   Stack,
   Switch,
+  Table,
   Text,
 } from "@chakra-ui/react"
 import { useEffect, useMemo, useState } from "react"
@@ -53,6 +56,7 @@ function PrintConfigFormPage() {
   const [loading, setLoading] = useState(isEdit)
   const [saving, setSaving] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [previewOpen, setPreviewOpen] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -166,10 +170,13 @@ function PrintConfigFormPage() {
     return Object.keys(next).length === 0
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!validate()) return
+    setPreviewOpen(true)
+  }
 
+  async function confirmSave() {
     setSaving(true)
     try {
       if (isEdit && id) {
@@ -185,6 +192,7 @@ function PrintConfigFormPage() {
           description: `${form.name} was added.`,
         })
       }
+      setPreviewOpen(false)
       navigate("/print-configs")
     } catch (err) {
       const message =
@@ -556,9 +564,8 @@ function PrintConfigFormPage() {
                     bg="gray.800"
                     color="white"
                     _hover={{ bg: "gray.700" }}
-                    loading={saving}
                   >
-                    {isEdit ? "Save Changes" : "Create Config"}
+                    {isEdit ? "Review & Save" : "Review & Create"}
                   </Button>
                 </Flex>
               </Stack>
@@ -566,6 +573,158 @@ function PrintConfigFormPage() {
           )}
         </Box>
       </Flex>
+
+      {/* Preview / Confirm Dialog */}
+      <Dialog.Root
+        open={previewOpen}
+        onOpenChange={(e) => {
+          if (!e.open && !saving) setPreviewOpen(false)
+        }}
+        size="lg"
+        role="alertdialog"
+      >
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content borderRadius="xl">
+            <Dialog.Header pb={2}>
+              <Dialog.Title fontSize="md" fontWeight="semibold" color="gray.800">
+                {isEdit
+                  ? `Update "${form.name}" config?`
+                  : `Add "${form.name}" config?`}
+              </Dialog.Title>
+            </Dialog.Header>
+
+            <Dialog.Body pt={2} pb={4}>
+              <Text fontSize="sm" color="gray.600" mb={4}>
+                Please review the details below. Are you sure you want to{" "}
+                {isEdit ? "update" : "add"} this config?
+              </Text>
+
+              <Stack gap={4}>
+                {/* Basics */}
+                <Box border="1px solid" borderColor="gray.200" borderRadius="md" p={4}>
+                  <Text fontSize="xs" fontWeight="700" color="gray.500" mb={3}>
+                    BASICS
+                  </Text>
+                  <Grid templateColumns="1fr 1fr 1fr" gap={3}>
+                    <Stack gap={0}>
+                      <Text fontSize="xs" color="gray.500">Name</Text>
+                      <Text fontSize="sm" fontWeight="medium" color="gray.800">
+                        {form.name}
+                      </Text>
+                    </Stack>
+                    <Stack gap={0}>
+                      <Text fontSize="xs" color="gray.500">Base Rate</Text>
+                      <Text fontSize="sm" fontWeight="medium" color="gray.800">
+                        ₹{form.pricing.baseRate}
+                      </Text>
+                    </Stack>
+                    <Stack gap={0}>
+                      <Text fontSize="xs" color="gray.500">Status</Text>
+                      <Box>
+                        <Badge
+                          colorPalette={form.active ? "green" : "gray"}
+                          variant="subtle"
+                          borderRadius="full"
+                          px={2}
+                        >
+                          {form.active ? "Active" : "Inactive"}
+                        </Badge>
+                      </Box>
+                    </Stack>
+                  </Grid>
+                </Box>
+
+                {/* Paper Qualities */}
+                <Box border="1px solid" borderColor="gray.200" borderRadius="md" p={4}>
+                  <Text fontSize="xs" fontWeight="700" color="gray.500" mb={3}>
+                    PAPER QUALITIES ({form.options.paperQualities.length})
+                  </Text>
+                  <Table.Root size="sm" variant="line">
+                    <Table.Header>
+                      <Table.Row>
+                        <Table.ColumnHeader fontSize="xs">Name</Table.ColumnHeader>
+                        <Table.ColumnHeader fontSize="xs">GSM</Table.ColumnHeader>
+                        <Table.ColumnHeader fontSize="xs" textAlign="end">
+                          Extra
+                        </Table.ColumnHeader>
+                      </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
+                      {form.options.paperQualities.map((p, i) => (
+                        <Table.Row key={i}>
+                          <Table.Cell fontSize="sm">{p.name}</Table.Cell>
+                          <Table.Cell fontSize="sm">{p.gsm}</Table.Cell>
+                          <Table.Cell fontSize="sm" textAlign="end">
+                            ₹{p.extra}
+                          </Table.Cell>
+                        </Table.Row>
+                      ))}
+                    </Table.Body>
+                  </Table.Root>
+                </Box>
+
+                {/* Sizes */}
+                <Box border="1px solid" borderColor="gray.200" borderRadius="md" p={4}>
+                  <Text fontSize="xs" fontWeight="700" color="gray.500" mb={3}>
+                    SIZES ({form.options.sizes.length})
+                  </Text>
+                  <Table.Root size="sm" variant="line">
+                    <Table.Header>
+                      <Table.Row>
+                        <Table.ColumnHeader fontSize="xs">Name</Table.ColumnHeader>
+                        <Table.ColumnHeader fontSize="xs" textAlign="end">
+                          Width (mm)
+                        </Table.ColumnHeader>
+                        <Table.ColumnHeader fontSize="xs" textAlign="end">
+                          Height (mm)
+                        </Table.ColumnHeader>
+                        <Table.ColumnHeader fontSize="xs" textAlign="end">
+                          Extra
+                        </Table.ColumnHeader>
+                      </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
+                      {form.options.sizes.map((s, i) => (
+                        <Table.Row key={i}>
+                          <Table.Cell fontSize="sm">{s.name}</Table.Cell>
+                          <Table.Cell fontSize="sm" textAlign="end">{s.width}</Table.Cell>
+                          <Table.Cell fontSize="sm" textAlign="end">{s.height}</Table.Cell>
+                          <Table.Cell fontSize="sm" textAlign="end">₹{s.extra}</Table.Cell>
+                        </Table.Row>
+                      ))}
+                    </Table.Body>
+                  </Table.Root>
+                </Box>
+              </Stack>
+            </Dialog.Body>
+
+            <Dialog.Footer pt={2}>
+              <HStack gap={2} justify="flex-end" width="full">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  colorPalette="gray"
+                  disabled={saving}
+                  onClick={() => setPreviewOpen(false)}
+                >
+                  Back to edit
+                </Button>
+                <Button
+                  size="sm"
+                  bg="gray.800"
+                  color="white"
+                  _hover={{ bg: "gray.700" }}
+                  loading={saving}
+                  onClick={confirmSave}
+                >
+                  {isEdit ? "Yes, update" : "Yes, add"}
+                </Button>
+              </HStack>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Dialog.Root>
     </Box>
   )
 }
