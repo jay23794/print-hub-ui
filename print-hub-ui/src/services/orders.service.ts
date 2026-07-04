@@ -100,6 +100,20 @@ export async function getAllOrders(): Promise<OrderActionResponse[]> {
   return res.data
 }
 
+export interface OrderSummary {
+  todayOrders: number
+  pending: number
+  cancelled: number
+  delivered: number
+  totalPrints: number
+  totalOrders: number
+}
+
+export async function getOrderSummary(): Promise<OrderSummary> {
+  const res = await apiGet<{ data: OrderSummary }>("/admin/order/summary")
+  return res.data
+}
+
 export async function acceptOrder(orderId: string): Promise<OrderActionResponse> {
   return apiPatch<OrderActionResponse>("/admin/order/accept", { orderId })
 }
